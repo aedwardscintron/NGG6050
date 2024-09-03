@@ -1,0 +1,138 @@
+September 4th, 2024
+Andrea Edwards-Cintron
+
+Exercise #1: If someone gets a positive test, it is "statistically significant" at the p<0.05 level? Why or why not?
+
+Sample = 1000
+False positive rate = 0.05
+False negative rate = 0
+WHO estimates of HIV prevalence = 0.6%
+Source: https://www.who.int/data/gho/data/themes/hiv-aids
+
+True positives = 1000 * (0.6/100) = 6
+False positives = 1000 * ((100-0.6)/100) * 0.05 = ~50
+
+Remaining tests would be negative
+True negative = 1000 - 56 = 944
+False negative = 0
+
+Positive Predictive Value: 6/(50+6) = 6/56 * 100 = 11%
+
+Error Rate = (50/1000) * 100 = 5%
+
+Answer: No, not by itself. This is because a singular data point within a dataset would not be enough to disprove the null hypothesis. It is possible that this data
+point is part of a group that is collectively considered to be statistically significant with a p value<0.05, but not as a singular data point.
+
+However,the positive predictive value of 11% and error rate of 5% suggest that the diagnostic capabilities of this test may not be statistically significant for this particular dataset.
+
+
+
+
+
+Exercise #2: What is the probability that if someone gets a positive test, that person is infected?
+
+Probability that the person with a positive test result actually has the disease
+P(Hypothesis|Data) = (P(Data|Hypothesis) * P(Hypothesis))/P(Data)
+
+Can also be expressed as:
+P(A|B) = (P(B|A) * P(A))/P(B)
+
+Prior (infection rate)
+P(A) = will vary from 0 to 1
+
+Probability that the test will be positive for someone that has the disease
+P(B|A) = 1; since there are no false negatives, every person with the disease will test positive
+
+Probability of a false positive
+P(B| ¬A) = 0.05
+
+Probability of not infected
+P(¬A) = 1 - P(A)
+
+
+For P(A) = 0
+P(B) = P(B|A) * P(A) + P(B|¬A) * P(¬A), Where P(¬A) = 1 - 0 = 1
+P(B) = 1 * 0 + 0.05 * 1 = 0.05
+P(A|B) = 1 * 0/0.05 = 0
+
+
+For P(A) = 0.1
+P(B) = P(B|A) * P(A) + P(B|¬A) * P(¬A), Where P(¬A) = 1 - 0.1 = 0.9
+P(B) = 1 * 0.1 + 0.05 * 0.9 = 0.145
+P(A|B) = 1 * 0.1/0.145 = 0.69
+
+
+For P(A) = 0.2
+P(B) = P(B|A) * P(A) + P(B|¬A) * P(¬A), Where P(¬A) = 1 - 0.2 = 0.8
+P(B) = 1 * 0.2 + 0.05 * 0.8 = 0.24
+P(A|B) = 1 * 0.2/0.24 = 0.83
+
+
+For P(A) = 0.3
+P(B) = P(B|A) * P(A) + P(B|¬A) * P(¬A), Where P(¬A) = 1 - 0.3 = 0.7
+P(B) = 1 * 0.3 + 0.05 * 0.7 = 0.335
+P(A|B) = 1 * 0.3/0.335 = 0.90
+
+
+For P(A) = 0.4
+P(B) = P(B|A) * P(A) + P(B|¬A) * P(¬A), Where P(¬A) = 1 - 0.4 = 0.6
+P(B) = 1 * 0.4 + 0.05 * 0.6 = 0.43
+P(A|B) = 1 * 0.4/0.43 = 0.93
+
+
+For P(A) = 0.5
+P(B) = P(B|A) * P(A) + P(B|¬A) * P(¬A), Where P(¬A) = 1 - 0.5 = 0.5
+P(B) = 1 * 0.5 + 0.05 * 0.5 = 0.525
+P(A|B) = 1 * 0.5/0.525 = 0.95
+
+
+For P(A) = 0.6
+P(B) = P(B|A) * P(A) + P(B|¬A) * P(¬A), Where P(¬A) = 1 - 0.6 = 0.4
+P(B) = 1 * 0.6 + 0.05 * 0.4 = 0.62
+P(A|B) = 1 * 0.6/0.62 = 0.97
+
+
+For P(A) = 0.7
+P(B) = P(B|A) * P(A) + P(B|¬A) * P(¬A), Where P(¬A) = 1 - 0.7 = 0.3
+P(B) = 1 * 0.7 + 0.05 * 0.3 = 0.715
+P(A|B) = 1 * 0.7/0.715 = 0.98
+
+
+For P(A) = 0.8
+P(B) = P(B|A) * P(A) + P(B|¬A) * P(¬A), Where P(¬A) = 1 - 0.8 = 0.2
+P(B) = 1 * 0.8 + 0.05 * 0.2 = 0.81
+P(A|B) = 1 * 0.8/0.81 = 0.99
+
+
+For P(A) = 0.9
+P(B) = P(B|A) * P(A) + P(B|¬A) * P(¬A), Where P(¬A) = 1 - 0.9 = 0.1
+P(B) = 1 * 0.9 + 0.05 * 0.1 = 0.905
+P(A|B) = 1 * 0.9/0.905 = 0.99
+
+
+For P(A) = 1
+P(B) = P(B|A) * P(A) + P(B|¬A) * P(¬A), Where P(¬A) = 1 - 1 = 0
+P(B) = 1 * 1 + 0.05 * 0 = 1
+P(A|B) = 1 * 1/1 = 1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
