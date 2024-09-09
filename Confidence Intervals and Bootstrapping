@@ -1,0 +1,217 @@
+#Z-SCORE
+
+import numpy as np
+from scipy.stats import norm
+
+#For SEM
+
+# Parameters
+mu = 10
+sigma = 2
+confidence_level = 0.95
+z_score = norm.ppf(0.5 + confidence_level / 2)  # Z-score for 95% confidence level
+
+# Sample sizes
+sample_sizes = [5, 10, 20, 40, 80, 160, 1000]
+
+# Results
+results = {}
+
+for n in sample_sizes:
+    # Generate sample; np.random.normal draws random samples from a Gaussian distribution
+    sample = np.random.normal(mu, sigma, n)
+
+    # Calculate sample mean and standard deviation
+    sample_mean = np.mean(sample)
+    sample_std = np.std(sample, ddof=1)
+
+    # Calculate SEM
+    sem = sample_std / np.sqrt(n)
+
+    # Calculate confidence interval
+    #Given that confidence interval involves adding and subtracting SEM * z-score, it is more efficient to create a variable with this value
+    margin_of_error = z_score * sem
+    lower_bound = sample_mean - margin_of_error
+    upper_bound = sample_mean + margin_of_error
+
+    results[n] = {
+        'Sample Mean': sample_mean,
+        'Standard Error of Mean (SEM)': sem,
+        'Confidence Interval': (lower_bound, upper_bound)
+    }
+
+# Print results
+for n, result in results.items():
+    print(f"Sample Size: {n}")
+    print(f"  Sample Mean: {result['Sample Mean']:.2f}")
+    print(f"  Standard Error of Mean (SEM): {result['Standard Error of Mean (SEM)']:.2f}")
+    print(f"  95% Confidence Interval: ({result['Confidence Interval'][0]:.2f}, {result['Confidence Interval'][1]:.2f})")
+    print()
+
+
+#Student t-distribution
+
+from scipy.stats import t
+
+
+for n in sample_sizes:
+    # Generate sample
+    sample = np.random.normal(mu, sigma, n)
+
+    # Calculate sample mean and standard deviation
+    sample_mean = np.mean(sample)
+    sample_std = np.std(sample, ddof=1)  # Using ddof=1 to get the sample standard deviation
+
+    # Calculate SEM
+    sem = sample_std / np.sqrt(n)
+
+    # Calculate t-score for 95% confidence level
+    t_score = t.ppf(0.5 + confidence_level / 2, df=n-1)
+
+    # Calculate confidence interval
+    margin_of_error = t_score * sem
+    lower_bound = sample_mean - margin_of_error
+    upper_bound = sample_mean + margin_of_error
+
+    results[n] = {
+        'Sample Mean': sample_mean,
+        'Standard Error of Mean (SEM)': sem,
+        'T-Score': t_score,
+        'Confidence Interval': (lower_bound, upper_bound)
+    }
+
+# Print results
+for n, result in results.items():
+    print(f"Sample Size: {n}")
+    print(f"  Sample Mean: {result['Sample Mean']:.2f}")
+    print(f"  Standard Error of Mean (SEM): {result['Standard Error of Mean (SEM)']:.2f}")
+    print(f"  T-Score: {result['T-Score']:.2f}")
+    print(f"  95% Confidence Interval: ({result['Confidence Interval'][0]:.2f}, {result['Confidence Interval'][1]:.2f})")
+    print()
+
+
+#Bootstrapping
+
+import numpy as np
+
+def bootstrap_confidence_interval(data, num_resamples=1000, confidence_level=0.95):
+    # Generate bootstrap samples and calculate the statistic (mean in this case)
+    bootstrap_means = []
+    n = len(data)
+
+    for _ in range(num_resamples):
+        # Resample with replacement
+        resample = np.random.choice(data, size=n, replace=True)
+        # Compute the mean of the resample
+        bootstrap_means.append(np.mean(resample))
+
+    # Convert to a NumPy array for easier manipulation
+    bootstrap_means = np.array(bootstrap_means)
+
+    # Compute the lower and upper percentiles for the confidence interval
+    lower_percentile = (1 - confidence_level) / 2 * 100
+    upper_percentile = (1 + confidence_level) / 2 * 100
+
+    lower_bound = np.percentile(bootstrap_means, lower_percentile)
+    upper_bound = np.percentile(bootstrap_means, upper_percentile)
+
+    return lower_bound, upper_bound
+
+# Parameters
+mu = 10
+sigma = 2
+sample_sizes = [5, 10, 20, 40, 80, 160, 1000]
+num_resamples = 1000
+
+# Results
+results = {}
+
+for n in sample_sizes:
+    # Generate sample
+    sample = np.random.normal(mu, sigma, n)
+
+    # Compute the bootstrap confidence interval
+    lower_bound, upper_bound = bootstrap_confidence_interval(sample, num_resamples)
+
+    results[n] = {
+        'Sample Mean': np.mean(sample),
+        'Bootstrap 95% Confidence Interval': (lower_bound, upper_bound)
+    }
+
+# Print results
+for n, result in results.items():
+    print(f"Sample Size: {n}")
+    print(f"  Sample Mean: {result['Sample Mean']:.2f}")
+    print(f"  95% Confidence Interval: ({result['Bootstrap 95% Confidence Interval'][0]:.2f}, {result['Bootstrap 95% Confidence Interval'][1]:.2f})")
+    print()
+
+
+#Bayesian
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.integrate import cumtrapz
+from scipy.stats import norm
+
+# Population parameters
+population_mean = 10
+population_std = 2
+sigma_sq = population_std**2
+
+# Sample sizes
+sample_sizes = [5, 10, 20, 40, 80, 160, 1000]
+
+# Constants (assuming p/k = 1 for simplicity)
+p = 1
+k = 1
+
+# For plotting
+mu_range = np.linspace(population_mean - 4*population_std, population_mean + 4*population_std, 1000)
+credible_intervals = []
+
+# Define posterior distribution function
+def posterior(mu, sample_mean, n):
+    normalization_factor = p / (k * np.sqrt(2 * np.pi * sigma_sq))
+    exp_term1 = np.exp(- (n**2 * sigma_sq) / (sigma_sq))
+    exp_term2 = np.exp(-0.5 * (sigma_sq / n) * (mu - sample_mean)**2)
+    return normalization_factor * exp_term1 * exp_term2
+
+# Compute and plot results for each sample size
+plt.figure(figsize=(14, 8))
+
+for n in sample_sizes:
+    # Simulate sample
+    samples = np.random.normal(loc=population_mean, scale=population_std, size=n)
+    sample_mean = np.mean(samples)
+
+    # Compute posterior values
+    posterior_values = posterior(mu_range, sample_mean, n)
+
+    # Normalize posterior values
+    posterior_values /= np.sum(posterior_values * np.diff(mu_range)[0])
+
+    # Compute CDF
+    cdf_values = cumtrapz(posterior_values, mu_range, initial=0)
+
+    # Find 95% credible interval
+    lower_bound = np.interp(0.025, cdf_values, mu_range)
+    upper_bound = np.interp(0.975, cdf_values, mu_range)
+    credible_intervals.append((lower_bound, upper_bound))
+
+    # Plot posterior distribution and credible interval
+    plt.plot(mu_range, posterior_values, label=f'n={n}')
+    plt.fill_between(mu_range, 0, posterior_values, where=(mu_range >= lower_bound) & (mu_range <= upper_bound), alpha=0.3)
+
+# Add labels and legend
+plt.axvline(population_mean, color='r', linestyle='--', label='True Mean')
+plt.xlabel('μ')
+plt.ylabel('Posterior Density')
+plt.title('Posterior Distributions and 95% Credible Intervals for Different Sample Sizes')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Print 95% credible intervals
+for n, (lower, upper) in zip(sample_sizes, credible_intervals):
+    print(f"Sample size {n}: 95% Credible Interval = ({lower:.2f}, {upper:.2f})")
