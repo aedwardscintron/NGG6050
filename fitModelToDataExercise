@@ -1,0 +1,117 @@
+
+%% 1. Getting the data
+
+% Note: This is example RT data while issue with file access is resolved
+RT_data = [1.2, 1.5, 1.7, 2.1, 1.8]
+
+
+%% 2. Define the objective function
+
+% Define the objective function using an anonymous function
+laterErrFcn = @(fits) -sum(log(normpdf(RT_data, fits(1), fits(2))));
+
+% Display the result
+disp(['Negative Log-Likelihood: ', num2str(laterErrFcn)]);
+
+
+%% 3. Define initial conditions
+
+
+% Define lower and upper bounds for parameters
+lowerBounds = [0.001, 0.001];  % Lower bounds
+upperBounds = [1000, 1000];     % Upper bounds 
+
+% Calculating reciprocal of reaction times
+reciprocalRT_data = 1 ./ RT_data;  
+
+%Calculating muR and deltaS for reciprocal data
+muR_initial = mean(reciprocalRT_data);   
+deltaS_initial = std(reciprocalRT_data);
+
+% Combine initial values into a vector
+initialValues = [muR_initial, deltaS_initial];
+
+% Display the initial values
+disp('Initial Values for Fitting:');
+disp(['muR: ', num2str(initialValues(1)), ', deltaS: ', num2str(initialValues(2))]);
+
+
+%% Note: I am getting several errors when I try to run this section (section 4) of the
+%% code. I have not been able to identify the source, but am unsure it it's
+%% due to not being able to import the data file
+
+
+% 4. Run the fits
+% 
+%   We will be using GlobalSearch . The general advantage of this approach 
+%   is to avoid local minima; for details, see:
+%   https://www.mathworks.com/help/gads/how-globalsearch-and-multistart-work.html
+%  
+%   These options seem to work well, but I don't have a stronger
+%   rationale for using them. See the Matlab documentation if you really
+%   want to dive in and understand them, and let me know if you find
+%   better settings!
+opts = optimoptions(@fmincon,    ... % "function minimization with constraints"
+   'Algorithm',   'active-set',  ...
+   'MaxIter',     3000,          ...
+   'MaxFunEvals', 3000);
+
+% Definine the "optimization problem" using variables defined above
+problem = createOptimProblem('fmincon',    ...
+    'objective',   laterErrFcn,     ... % Use the objective function
+    'x0',          initialValues,   ... % Initial conditions
+    'lb',          lowerBounds,     ... % Parameter lower bounds
+    'ub',          upperBounds,     ... % Parameter upper bounds
+    'options',     opts);                % Options defined above
+
+% Create a GlobalSearch object
+gs = GlobalSearch;
+   
+% Run it, returning the best-fitting parameter values and the negative-
+% log-likelihood returned by the objective function
+[fits(ii,:), nllk] = run(gs,problem);
+
+
+
+
+
+%5. Evaluate the fits
+
+
+%% Note: Given that I am not able to run step 4, I will express conceptually
+%% how I would approach step 5. I would calculate AIC and BIC based
+%% on the calculated log-likelihood values and repeat these
+%% calculations with varying model parameters. If the proposed model is the
+%% best match, the AIC and BIC values should be the lowest.
+
+
+%Example of how I would code for AIC and BIC calculations
+
+%Number of parameters in the LATER model (2: muR, deltaS)
+k=2;
+
+%Calculate AIC and BIC
+AIC = -2*logLikelihood + 2*k;
+BIC = -2*logLikelihood + k*log(length(RTs));
+
+
+%Display AIC and BIC
+disp(['AIC: ', num2str(AIC)]);
+disp(['BIC: ', num2str(BIC)]);
+
+
+
+%Alternate way to visualize: Plotting residuals
+
+predictedRT = normrnd(optimalParams(1), optimalParams(2), size(RT_data));  % Simulated RTs based on fitted parameters
+residuals = RT_data - predictedRT;
+
+figure;
+scatter(predictedRT, residuals);
+xlabel('Predicted Reaction Time');
+ylabel('Residuals');
+title('Residuals Plot');
+horizontalLine = refline(0, 0);
+horizontalLine.Color = 'r';
+
+
